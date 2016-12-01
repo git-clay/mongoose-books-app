@@ -3,7 +3,10 @@ var mongoose = require('mongoose'),
 
 var BookSchema = new Schema({
   title: String,
-  author: String,
+  author: {
+  	type: Schema.Types.ObjectId,
+  	ref: 'Author'
+  },
   image: String,
   releaseDate: String
 });
@@ -11,3 +14,4 @@ var BookSchema = new Schema({
 var Book = mongoose.model('Book', BookSchema);
 
 module.exports = Book;
+module.exports.Author = require('./author.js');
