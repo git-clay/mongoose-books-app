@@ -19,41 +19,37 @@ app.use(express.static('public'));
 // body parser config to accept our datatypes
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// require models directory (contains BookSchema in book.js >> index.js)
+var db = require('./models');
 
 
 ////////////////////
 //  DATA
 ///////////////////
-
-var books = [
-  {
-    _id: 15,
-    title: "The Four Hour Workweek",
-    author: "Tim Ferriss",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/four_hour_work_week.jpg",
-    release_date: "April 1, 2007"
-  },
-  {
-    _id: 16,
-    title: "Of Mice and Men",
-    author: "John Steinbeck",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/of_mice_and_men.jpg",
-    release_date: "Unknown 1937"
-  },
-  {
-    _id: 17,
-    title: "Romeo and Juliet",
-    author: "William Shakespeare",
-    image: "https://s3-us-west-2.amazonaws.com/sandboxapi/romeo_and_juliet.jpg",
-    release_date: "Unknown 1597"
-  }
-];
-
-
-
-
-
-
+// hard coded books not needed since we will be using the db to save and access
+// var books = [
+//   {
+//     _id: 15,
+//     title: "The Four Hour Workweek",
+//     author: "Tim Ferriss",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/four_hour_work_week.jpg",
+//     release_date: "April 1, 2007"
+//   },
+//   {
+//     _id: 16,
+//     title: "Of Mice and Men",
+//     author: "John Steinbeck",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/of_mice_and_men.jpg",
+//     release_date: "Unknown 1937"
+//   },
+//   {
+//     _id: 17,
+//     title: "Romeo and Juliet",
+//     author: "William Shakespeare",
+//     image: "https://s3-us-west-2.amazonaws.com/sandboxapi/romeo_and_juliet.jpg",
+//     release_date: "Unknown 1597"
+//   }
+// ];
 
 ////////////////////
 //  ROUTES
@@ -67,14 +63,18 @@ app.get('/', function (req, res) {
   res.sendFile('views/index.html' , { root : __dirname});
 });
 
-// get all books
+// get all books (index)
 app.get('/api/books', function (req, res) {
   // send all books as JSON response
-  console.log('books index');
-  res.json(books);
+  db.Book.find(function(err,books){
+    console.log(books);
+    if(err){return console.log('index error: ' + err);}
+     res.json(books);
+  });
+
 });
 
-// get one book
+// get one book (FIND)
 app.get('/api/books/:id', function (req, res) {
   // find one book by its id
   console.log('books show', req.params);
@@ -84,21 +84,29 @@ app.get('/api/books/:id', function (req, res) {
       break; // we found the right book, we can stop searching
     }
   }
+
+  db.Book.findOne({"_id":req.params._id}, function(err,book){
+    if(err){return console.log('find error: ' + err);}
+    console.log(book);
+    res.json(book);
+  });
 });
 
-// create new book
+// create new book (NEW)
 app.post('/api/books', function (req, res) {
   // create new book with form data (`req.body`)
   console.log('books create', req.body);
   var newBook = req.body;
   books.push(newBook);
   res.json(newBook);
+
+
 });
 
 // update book
 // app.put('/api/books/:id', controllers.books.update);
 
-// delete book
+// delete book (findOneAndRemove)
 app.delete('/api/books/:id', function (req, res) {
   // get book id from url params (`req.params`)
   console.log('books delete', req.params);
@@ -111,6 +119,8 @@ app.delete('/api/books/:id', function (req, res) {
   var bookToDelete = books[deleteBookIndex];
   books.splice(deleteBookIndex, 1);
   res.json(bookToDelete);
+
+
 });
 
 
